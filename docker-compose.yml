@@ -1,0 +1,126 @@
+services:
+  adminer-nest-app:
+    image: adminer
+    container_name: adminer-nest-app
+    restart: always
+    ports:
+      - ${ADMINER_PORT}:8080
+    networks:
+        - vernemq-network
+
+  mysql_nest:
+    image: mysql
+    container_name: mysql_nest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ${DATABASE_DB}
+      MYSQL_USER: $DATABASE_USER
+      MYSQL_PASSWORD: $DATABASE_PASSWORD
+    ports:
+      - ${DATABASE_PORT}:3306
+    volumes:
+      - ./amysql-nest:/var/lib/mysql
+      - ./my.cnf:/etc/mysql/my.cnf
+    networks:
+      - vernemq-network
+
+  vernemq1:
+    image: vernemq/vernemq
+    container_name: vernemq1
+    restart: always
+    environment:
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_diversity: 'on'
+      DOCKER_VERNEMQ_PLUGINS.vmq_passwd: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_acl: 'off'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.auth_mysql.enabled: 'on'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.host: mysql_nest
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.port: $DATABASE_PORT
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.user: $DATABASE_USER
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password: $DATABASE_PASSWORD
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.database: $DATABASE_DB
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password_hash_method: 'md5'
+      DOCKER_VERNEMQ_ACCEPT_EULA: 'yes' 
+    ports:
+      - 1884:1883
+      - 8081:8080
+      - 8071:8888
+    networks:
+      - vernemq-network
+    depends_on:
+      - mysql_nest
+  
+  vernemq2:
+    image: vernemq/vernemq
+    container_name: vernemq2
+    restart: always
+    environment:
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_diversity: 'on'
+      DOCKER_VERNEMQ_PLUGINS.vmq_passwd: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_acl: 'off'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.auth_mysql.enabled: 'on'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.host: mysql_nest
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.port: $DATABASE_PORT
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.user: $DATABASE_USER
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password: $DATABASE_PASSWORD
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.database: $DATABASE_DB
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password_hash_method: 'md5'
+      DOCKER_VERNEMQ_ACCEPT_EULA: 'yes' 
+    ports:
+      - 1885:1883
+      - 8082:8080
+      - 8072:8888
+    networks:
+      - vernemq-network
+    depends_on:
+      - mysql_nest
+
+  vernemq3:
+    image: vernemq/vernemq
+    container_name: vernemq3
+    restart: always
+    environment:
+      DOCKER_VERNEMQ_ALLOW_ANONYMOUS: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_diversity: 'on'
+      DOCKER_VERNEMQ_PLUGINS.vmq_passwd: 'off'
+      DOCKER_VERNEMQ_PLUGINS.vmq_acl: 'off'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.auth_mysql.enabled: 'on'
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.host: mysql_nest
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.port: $DATABASE_PORT
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.user: $DATABASE_USER
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password: $DATABASE_PASSWORD
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.database: $DATABASE_DB
+      DOCKER_VERNEMQ_VMQ_DIVERSITY.mysql.password_hash_method: 'md5'
+      DOCKER_VERNEMQ_ACCEPT_EULA: 'yes' 
+    ports:
+      - 1886:1883
+      - 8083:8080
+      - 8073:8888
+    networks:
+      - vernemq-network
+    depends_on:
+      - mysql_nest
+
+  nginx:
+    image: nginx
+    container_name: nginx
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "1883:1883"
+    networks:
+      - vernemq-network
+    depends_on:
+      - vernemq1
+      - vernemq2
+      - vernemq3
+
+networks:
+  vernemq-network:
+ 
+
+
+
+
